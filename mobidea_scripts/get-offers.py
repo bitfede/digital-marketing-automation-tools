@@ -8,17 +8,30 @@
 
 import requests
 import time
+import pprint
+
+#define pretty print object
+pp = pprint.PrettyPrinter(indent=4)
 
 # opening file with credentials
 filename = 'tokenfile' 
-fin=open(filename,'r')
+fincreds=open(filename,'r')
+
+# opening file with offers
+filename = 'offerlist.txt' 
+finoffers=open(filename,'r')
 
 # reading credential keys off file
-lgn = fin.readline()
-pwd =  fin.readline()
+lgn = fincreds.readline()
+pwd =  fincreds.readline()
 
 lgn = lgn.rstrip()
 pwd = pwd.rstrip()
+
+# reading offer numbers off file and storing them into an array
+offersArr = []
+for lineoffer in finoffers:
+	offersArr.append(lineoffer.rstrip())
 
 # creating base url for our request
 base_api_url = "https://affiliates.mobidea.com/api/export"
@@ -35,7 +48,7 @@ payload = { 'login': lgn , 'password': pwd , 'currency': currencies['euro'] , 'f
 # building the url
 url = base_api_url + endpoints['offers']
 print("Sending GET request to " + url)
-print()
+print("")
 
 # making the api request
 r = requests.get(url, params=payload)
@@ -52,5 +65,38 @@ if status != 200:
 #get answer and work with it
 rhead = r.headers
 
-print(rhead)
-print(r.json())
+r_json = r.json()
+
+# testing shit
+pp.pprint(r_json[1])
+
+print "------"
+# offerinfo = r_json[1][0]["_value"]
+# offernumber = offerinfo.split("-") 
+# print offernumber[0]
+
+# loop
+for i in r_json:
+	offerinfo = i[0]["_value"]
+	offernumber = offerinfo.split("-")
+	offernumber = str(offernumber[0].strip())
+	if offernumber in offersArr:
+		print offernumber
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
