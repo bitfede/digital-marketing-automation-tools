@@ -26,7 +26,7 @@ key = key.rstrip()
 base_api_url = "http://report.propellerads.com"
 
 # setting params
-action = 'getStats'
+action = 'getCampaigns'
 date_range = 'last_7_days'
 stat_columns = ['show','click','convers','convrate','cpm','ctr','profit']
 group_by = 'campaign_id'
@@ -50,8 +50,7 @@ if status != 200:
 	print("Error")
 
 
-
-
+pp.pprint(r.json())
 
 
 
