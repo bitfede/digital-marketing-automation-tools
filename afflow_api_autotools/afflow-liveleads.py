@@ -10,6 +10,8 @@
 import requests
 import time
 import pprint
+import json
+import sys
 
 #define pretty print object
 pp = pprint.PrettyPrinter(indent=4)
@@ -33,7 +35,13 @@ dir_url = "/data/partner-lead-update.php"
 # owner = 1
 limit = 200
 
-for x in range(5):
+#lead data storage array
+lead_data = {}
+
+#number of loops total
+total_loops = 20
+
+for x in range(total_loops):
 
     # setting custom headers
     headers = {
@@ -63,12 +71,48 @@ for x in range(5):
     if status != 200:
     	print("Error")
 
-    leads = r.json()
-    pp.pprint(r.json())
+    leadsraw = r.json()
+    leads = leadsraw
 
-    print("pausing..\n")
+    for livelead in leads:
+
+        # pp.pprint(leads[0].get('country_code'))
+        pp.pprint(livelead)
+        print "--------------"
+
+        #get country code
+        countrycode = livelead.get('country_code')
+
+        pp.pprint(countrycode)
+        print "--------------"        
+
+        # country dict key has already been created
+        if countrycode in lead_data:
+            #add a point and insert this lead info
+            lead_data[countrycode].append(livelead)
+        else:
+            #create the key to the dict
+            lead_data[countrycode] = [livelead]
+
+        #nothing else to do with the individual lead
+
+
+
+    print "finished! " + str(x) + "/" + str(total_loops) + "\n"
     time.sleep(15)
-    print("resuming!!\n")
+    print "resuming!!\n"
+
+for datakey in lead_data:
+    # print "examining " + str(datakey)
+    sys.stdout.write(datakey + ": ")
+    # print "adesso butto " + str(len(lead_data[datakey]))  + " asterischi"
+    for onelead in range(len(lead_data[datakey])):
+        # print "asterisk yo"
+        # pp.pprint(onelead)
+        sys.stdout.write("#")
+    print " |"
+
+# pp.pprint(lead_data)
 
 
 
