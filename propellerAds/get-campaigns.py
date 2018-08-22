@@ -8,7 +8,12 @@
 
 import requests
 import time
+import datetime
 import pprint
+import json
+
+#define payout value
+PAYOUT = 0.56
 
 #define pretty print object
 pp = pprint.PrettyPrinter(indent=4)
@@ -43,9 +48,10 @@ r = requests.post(url, params=payload)
 # working with answer
 status = r.status_code
 
-print("STATUS: " + str(status)) 
+print("r1 STATUS: " + str(status)) 
 if status != 200:
 	print("Error!!!! <<<<<<<<")
+	exit(1)
 
 #receive the login api token
 login_api_token = r.json()["api_token"]
@@ -62,10 +68,97 @@ r2 = requests.get(url2, headers=header2, params=payload2)
 #get the r2 status
 status2 = r2.status_code
 
-print ('R2 STATUS ----')
-print status2
+print ('r2 STATUS: ' + str(status2))
 
-pp.pprint(r2.json())
+if status2 != 200:
+	print("Error!!!! <<<<<<<<")
+	exit(2)
+
+#get all the running campaigns
+r2_results = r2.json()["result"]
+
+#create a camp id array and get ids
+running_camps_id = []
+
+for r2_result in r2_results:
+	running_camps_id.append(r2_result["id"])
+
+for camp_id in running_camps_id:
+
+	##get the zones
+
+	#variables
+	url3 = base_api_url + '/statistics/zones'
+	today = datetime.datetime.today().strftime('%Y-%m-%d')
+	payload3 = {"campaign_id[]": [camp_id], "zone_id[]": ["1718995"] , "date_from": "2018-01-01", "date_to": today }
+	
+	r3 = requests.get(url3, headers=header2, params=payload3)
+
+	status3 = r3.status_code
+	print "r3 STATUS: " + str(status3)
+
+	if status3 != 200:
+		print("Error!!!! <<<<<<<<")
+		exit(3)
+
+	r3_result = r3.json()["result"]
+
+	# create temp list of blacklisted zones
+	zone_blacklist = []
+	counter = 0
+	countertot = 0
+
+	for zone in r3_result:
+		countertot += 1
+		zone_spent = float(zone["money"])
+		if (zone["conversions"] > '0'):
+			if (float(zone["money"]) > PAYOUT*3):
+				print "########################"
+				print "ZONE#" + zone["zone_id"]
+				print "spent: " + zone["money"]
+				print "Added to BLOCK list"
+				print "########################"
+				zone_blacklist.append(zone["zone_id"])
+				counter = counter + 1
+		else:
+			#no conversion zones, just check if they spent too much
+			if (zone["conversions"] == '0'):
+				if (float(zone["money"]) > PAYOUT*2):
+					print "########################"
+					print "ZONE#" + zone["zone_id"]
+					print "spent: " + zone["money"]
+					print "BLOCKED---"
+					print "########################"
+					print (str(zone["money"]) + " vs " + str(PAYOUT*2))
+					print (float(zone["money"]) > PAYOUT*2)
+					zone_blacklist.append(zone["zone_id"])
+					counter = counter + 1
+
+	print "I will block " + str(counter) + " zones! out of " + str(countertot) + " || for camp: " + str(camp_id)  
+
+	#create request to block zones
+
+	url4 = base_api_url + '/campaigns/' + str(camp_id) + '/targeting/exclude/zone'
+	# zone_blacklist = json.dumps(zone_blacklist)
+	payload4 = { "zone": zone_blacklist }
+
+	r4 = requests.post( url4 , data=(payload4),  headers=header2)
+
+	status4 = r4.status_code
+	print "r4 STATUS: " + str(status4)
+
+	print "----"
+	print (r4.json())
+
+	if status4 != 200:
+		print("Error!!!! <<<<<<<<")
+		exit(3)
+
+
+
+
+
+
 
 
 
