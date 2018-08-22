@@ -59,7 +59,7 @@ login_api_token = r.json()["api_token"]
 #setting variables
 url2 = base_api_url + '/campaigns'
 bearer_token = "Bearer " + login_api_token
-header2 = { "Authorization": bearer_token }
+header2 = { "Authorization": bearer_token, 'Content-Type': 'application/json'}
 payload2 = { "status[]": "6", "is_archived": "0"}
 
 # make the get all campaigns request
@@ -118,7 +118,7 @@ for camp_id in running_camps_id:
 				print "spent: " + zone["money"]
 				print "Added to BLOCK list"
 				print "########################"
-				zone_blacklist.append(zone["zone_id"])
+				zone_blacklist.append(str(zone["zone_id"]))
 				counter = counter + 1
 		else:
 			#no conversion zones, just check if they spent too much
@@ -131,22 +131,22 @@ for camp_id in running_camps_id:
 					print "########################"
 					print (str(zone["money"]) + " vs " + str(PAYOUT*2))
 					print (float(zone["money"]) > PAYOUT*2)
-					zone_blacklist.append(zone["zone_id"])
+					zone_blacklist.append(str(zone["zone_id"]))
 					counter = counter + 1
 
 	print "I will block " + str(counter) + " zones! out of " + str(countertot) + " || for camp: " + str(camp_id)  
 
-	#create request to block zones
-
+	# create request to block zones for current camp ~!!
+  #TODO !!!
 	url4 = base_api_url + '/campaigns/' + str(camp_id) + '/targeting/exclude/zone'
-	# zone_blacklist = json.dumps(zone_blacklist)
-	payload4 = { "zone": zone_blacklist }
+	zone_blacklist = json.dumps(zone_blacklist)
+	payload4 = json.dumps({ "zone": ["1718995"]})
 
-	r4 = requests.post( url4 , data=(payload4),  headers=header2)
+	r4 = requests.put( url4 , data=payload4,  headers=header2)
 
 	status4 = r4.status_code
 	print "r4 STATUS: " + str(status4)
-
+	print header2
 	print "----"
 	print (r4.json())
 
