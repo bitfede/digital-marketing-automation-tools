@@ -86,11 +86,11 @@ for r2_result in r2_results:
 for camp_id in running_camps_id:
 
 	##get the zones
-
+	print("--- Optimizing Camp " + str(camp_id))
 	#variables
 	url3 = base_api_url + '/statistics/zones'
 	today = datetime.datetime.today().strftime('%Y-%m-%d')
-	payload3 = {"campaign_id[]": [camp_id], "zone_id[]": ["1718995"] , "date_from": "2018-01-01", "date_to": today }
+	payload3 = {"campaign_id[]": [camp_id] , "date_from": "2018-01-01", "date_to": today }
 	
 	r3 = requests.get(url3, headers=header2, params=payload3)
 
@@ -108,11 +108,13 @@ for camp_id in running_camps_id:
 	counter = 0
 	countertot = 0
 
+	# loop thru zones
+
 	for zone in r3_result:
 		countertot += 1
 		zone_spent = float(zone["money"])
 		if (zone["conversions"] > '0'):
-			if (float(zone["money"]) > PAYOUT*3):
+			if (float(zone["money"]) > PAYOUT*2):
 				print "########################"
 				print "ZONE#" + zone["zone_id"]
 				print "spent: " + zone["money"]
@@ -123,14 +125,12 @@ for camp_id in running_camps_id:
 		else:
 			#no conversion zones, just check if they spent too much
 			if (zone["conversions"] == '0'):
-				if (float(zone["money"]) > PAYOUT*2):
+				if (float(zone["money"]) > PAYOUT):
 					print "########################"
 					print "ZONE#" + zone["zone_id"]
 					print "spent: " + zone["money"]
 					print "BLOCKED---"
 					print "########################"
-					print (str(zone["money"]) + " vs " + str(PAYOUT*2))
-					print (float(zone["money"]) > PAYOUT*2)
 					zone_blacklist.append(str(zone["zone_id"]))
 					counter = counter + 1
 
@@ -139,8 +139,7 @@ for camp_id in running_camps_id:
 	# create request to block zones for current camp ~!!
   #TODO !!!
 	url4 = base_api_url + '/campaigns/' + str(camp_id) + '/targeting/exclude/zone'
-	zone_blacklist = json.dumps(zone_blacklist)
-	payload4 = json.dumps({ "zone": ["1718995"]})
+	payload4 = json.dumps({"zone": zone_blacklist})
 
 	r4 = requests.put( url4 , data=payload4,  headers=header2)
 
