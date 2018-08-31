@@ -114,18 +114,24 @@ for camp_id in running_camps_id:
 		countertot += 1
 		zone_spent = float(zone["money"])
 		if (zone["conversions"] > '0'):
-			if (float(zone["money"]) > PAYOUT*2):
+			#calculate ROI
+			conversions = float(zone["conversions"])
+			gross_revenue = float(conversions) * PAYOUT
+			investment = float(zone["money"])
+			roi = (gross_revenue - investment) / float(investment)
+			roi = roi * 100
+			if (roi < -25):
 				print "########################"
 				print "ZONE#" + zone["zone_id"]
-				print "spent: " + zone["money"]
+				print "roi: " + str(roi)
 				print "Added to BLOCK list"
 				print "########################"
 				zone_blacklist.append(str(zone["zone_id"]))
 				counter = counter + 1
 		else:
 			#no conversion zones, just check if they spent too much
-			if (zone["conversions"] == '0'):
-				if (float(zone["money"]) > PAYOUT):
+			if (zone["conversions"] == '0' and zone["zone_id"]):
+				if (zone_spent > PAYOUT):
 					print "########################"
 					print "ZONE#" + zone["zone_id"]
 					print "spent: " + zone["money"]
